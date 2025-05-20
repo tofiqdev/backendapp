@@ -1,10 +1,18 @@
 const express = require("express");
 const puppeteer = require("puppeteer");
-const cors = require("cors"); // eklendi
+const cors = require("cors");
 
 const app = express();
-app.use(cors()); // Eklendi: Her yerden erişim için!
+app.use(cors());
 app.use(express.json());
+
+function getExecutablePath() {
+  if (process.env.NODE_ENV === "production" && process.env.RENDER) {
+    // Render.com için yaygın chromium yolu
+    return "/usr/bin/chromium-browser";
+  }
+  return undefined; // Local dev için normal puppeteer chromium
+}
 
 app.post("/download", async (req, res) => {
   const { url } = req.body;
@@ -17,6 +25,7 @@ app.post("/download", async (req, res) => {
     browser = await puppeteer.launch({
       args: ['--no-sandbox', '--disable-setuid-sandbox'],
       headless: true,
+      executablePath: getExecutablePath(),
     });
     const page = await browser.newPage();
 
